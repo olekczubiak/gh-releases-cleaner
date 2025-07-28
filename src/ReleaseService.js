@@ -20,10 +20,9 @@ class ReleaseService {
         return data;
     }
 
-    async find(strategy) {
-        const releases = await this.listAllReleases();
-
-        this.core.info(`🔍 Using strategy: ${strategy}`);
+    async find(releases) {
+        const strategy = this.core.getInput('strategy') || Strategy.ALL;
+        this.core.info(`🔍 Finding releases using strategy: ${strategy}`);
         this.core.info(`📦 Total releases fetched: ${releases.length}`);
 
         if (strategy === Strategy.ALL) {
