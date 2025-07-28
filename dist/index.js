@@ -31323,6 +31323,13 @@ function requireReleaseService () {
 	            this.core.info(`- ${release.tag_name} (${release.name || 'no name'})`);
 	        }
 	    }
+
+	    logReleasesToKeep(releases) {
+	        this.core.info(`Keeping ${releases.length} release(s):`);
+	        for (const release of releases) {
+	            this.core.info(`- ${release.tag_name} (${release.name || 'no name'})`);
+	        }
+	    }
 	}
 
 	ReleaseService_1 = { ReleaseService };
@@ -31342,7 +31349,9 @@ function requireSrc () {
 	async function run(releaseService) {
 	    try {
 	        const releases = await releaseService.listAllReleases();
-	        releaseService.logReleasesToDelete(releaseService.getToDelete(releases, await releaseService.find(releases)));
+	        const releasesToKeep = await releaseService.find(releases);
+	        releaseService.logReleasesToDelete(releaseService.getToDelete(releases, releasesToKeep));
+	        releaseService.logReleasesToKeep(releasesToKeep);
 	    } catch (err) {
 	        releaseService.core.setFailed(`❌ ${err.message}`);
 	    }
