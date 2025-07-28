@@ -63,6 +63,8 @@ function getAugmentedNamespace(n) {
 	return a;
 }
 
+var src = {};
+
 var core = {};
 
 var command = {};
@@ -27277,8 +27279,6 @@ function requireCore () {
 	return core;
 }
 
-var coreExports = requireCore();
-
 var github = {};
 
 var context = {};
@@ -31239,15 +31239,76 @@ function requireGithub () {
 	return github;
 }
 
-var githubExports = requireGithub();
+var ReleaseService_1;
+var hasRequiredReleaseService;
 
-try {
-    coreExports.info(`Hello world!`);
+function requireReleaseService () {
+	if (hasRequiredReleaseService) return ReleaseService_1;
+	hasRequiredReleaseService = 1;
+	class ReleaseService {
+	    constructor(octokit, context, logger) {
+	        this.octokit = octokit;
+	        this.owner = context.repo.owner;
+	        this.repo = context.repo.repo;
+	        this.logger = logger;
+	    }
 
-    // Get the JSON webhook payload for the event that triggered the workflow
-    const payload = JSON.stringify(githubExports.context.payload, undefined, 2);
-    coreExports.info(`The event payload: ${payload}`);
-} catch (error) {
-    coreExports.setFailed(error.message);
+	    async listAllReleases() {
+	        const { data } = await this.octokit.rest.repos.listReleases({
+	            owner: this.owner,
+	            repo: this.repo,
+	        });
+
+	        return data;
+	    }
+
+	    logReleases(releases) {
+	        this.logger.info(`Found ${releases.length} release(s):`);
+	        for (const release of releases) {
+	            this.logger.info(`- ${release.tag_name} (${release.name || 'no name'})`);
+	        }
+	    }
+	}
+
+	ReleaseService_1 = { ReleaseService };
+	return ReleaseService_1;
 }
+
+var hasRequiredSrc;
+
+function requireSrc () {
+	if (hasRequiredSrc) return src;
+	hasRequiredSrc = 1;
+	const core = requireCore();
+	const github = requireGithub();
+
+	const { ReleaseService } = requireReleaseService();
+
+	async function run(releaseService) {
+	    try {
+	        const releases = await releaseService.listAllReleases();
+	        releaseService.logReleases(releases);
+	    } catch (err) {
+	        releaseService.logger.setFailed(`❌ ${err.message}`);
+	    }
+	}
+
+	async function main() {
+	    const token = core.getInput('token');
+	    const octokit = github.getOctokit(token);
+	    const context = github.context;
+
+	    const releaseService = new ReleaseService(octokit, context, core);
+
+	    await run(releaseService);
+	}
+
+	main();
+	return src;
+}
+
+var srcExports = requireSrc();
+var index = /*@__PURE__*/getDefaultExportFromCjs(srcExports);
+
+export { index as default };
 //# sourceMappingURL=index.js.map

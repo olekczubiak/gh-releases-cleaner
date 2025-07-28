@@ -1,12 +1,25 @@
-import * as core from "@actions/core";
-import * as github from "@actions/github";
+const core = require('@actions/core');
+const github = require('@actions/github');
 
-try {
-    core.info(`Hello world!`);
+const { ReleaseService } = require('./ReleaseService');
 
-    // Get the JSON webhook payload for the event that triggered the workflow
-    const payload = JSON.stringify(github.context.payload, undefined, 2);
-    core.info(`The event payload: ${payload}`);
-} catch (error) {
-    core.setFailed(error.message);
+async function run(releaseService) {
+    try {
+        const releases = await releaseService.listAllReleases();
+        releaseService.logReleases(releases);
+    } catch (err) {
+        releaseService.logger.setFailed(`❌ ${err.message}`);
+    }
 }
+
+async function main() {
+    const token = core.getInput('token');
+    const octokit = github.getOctokit(token);
+    const context = github.context;
+
+    const releaseService = new ReleaseService(octokit, context, core);
+
+    await run(releaseService);
+}
+
+main();

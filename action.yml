@@ -1,6 +1,10 @@
 name: "Github releases cleaner"
 description: "This actions removes all unncessary releases from a repository."
 author: "Aleksander Czubiak"
+inputs:
+  token:
+    description: "GitHub Token"
+    required: true
 runs:
   using: "node20"
   main: dist/index.js
