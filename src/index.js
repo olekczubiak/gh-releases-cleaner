@@ -8,7 +8,7 @@ async function run(releaseService) {
         const releases = await releaseService.listAllReleases();
         releaseService.logReleases(releaseService.find(releases));
     } catch (err) {
-        releaseService.logger.setFailed(`❌ ${err.message}`);
+        releaseService.core.setFailed(`❌ ${err.message}`);
     }
 }
 
