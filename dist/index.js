@@ -31245,12 +31245,17 @@ var hasRequiredReleaseService;
 function requireReleaseService () {
 	if (hasRequiredReleaseService) return ReleaseService_1;
 	hasRequiredReleaseService = 1;
+	const Strategy = {
+	    ALL: 'all',
+	    LATEST_IN_MINOR: 'latestInMinor',
+	};
+
 	class ReleaseService {
-	    constructor(octokit, context, logger) {
+	    constructor(octokit, context, core) {
 	        this.octokit = octokit;
 	        this.owner = context.repo.owner;
 	        this.repo = context.repo.repo;
-	        this.logger = logger;
+	        this.core = core;
 	    }
 
 	    async listAllReleases() {
@@ -31262,10 +31267,44 @@ function requireReleaseService () {
 	        return data;
 	    }
 
+	    async find(releases) {
+	        const strategy = this.core.getInput('strategy');
+	        if (strategy === Strategy.ALL) {
+	            return releases;
+	        }
+
+	        if (strategy === Strategy.LATEST_IN_MINOR) {
+	            const latestReleases = {};
+
+	            for (const release of releases) {
+	                const match = release.tag_name.match(/^v(\d+)\.(\d+)\.(\d+)$/);
+	                if (!match) continue;
+
+	                const [ , major, minor, patch ] = match;
+	                const key = `v${major}.${minor}`;
+	                const currentPatch = parseInt(patch, 10);
+
+	                if (
+	                    !latestReleases[key] ||
+	                    currentPatch > parseInt(latestReleases[key].tag_name.split('.')[2], 10)
+	                ) {
+	                    latestReleases[key] = release;
+	                }
+	            }
+
+	            return Object.values(latestReleases).sort((a, b) =>
+	                b.tag_name.localeCompare(a.tag_name, undefined, { numeric: true })
+	            );
+	        }
+
+	        throw new Error(`Unknown strategy: ${strategy}`);
+	    }
+
 	    logReleases(releases) {
-	        this.logger.info(`Found ${releases.length} release(s):`);
+	        this.core.info('Releases');
+	        this.core.info(`Found ${releases.length} release(s):`);
 	        for (const release of releases) {
-	            this.logger.info(`- ${release.tag_name} (${release.name || 'no name'})`);
+	            this.core.info(`- ${release.tag_name} (${release.name || 'no name'})`);
 	        }
 	    }
 	}
@@ -31287,7 +31326,7 @@ function requireSrc () {
 	async function run(releaseService) {
 	    try {
 	        const releases = await releaseService.listAllReleases();
-	        releaseService.logReleases(releases);
+	        releaseService.logReleases(releaseService.find(releases));
 	    } catch (err) {
 	        releaseService.logger.setFailed(`❌ ${err.message}`);
 	    }
