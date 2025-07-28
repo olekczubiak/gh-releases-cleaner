@@ -50,7 +50,7 @@ jobs:
           git add version.txt
           git commit -m "[auto][skip ci] Bump version to $new_version"
           git push
-          git push --tags --force
+          git push --tags
           echo "Changes committed and pushed successfully"
           echo "Tag created: v$VERSION"
           echo "New version: $new_version"
