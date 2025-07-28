@@ -65,9 +65,13 @@ class ReleaseService {
         throw new Error(`Unknown strategy: ${strategy}`);
     }
 
-    logReleases(releases) {
-        this.core.info('Releases');
-        this.core.info(`Found ${releases.length} release(s):`);
+    getToDelete(allReleases, releasesToKeep) {
+        this.core.info(`📉 Releases to delete: ${allReleases.length - releasesToKeep.length}`);
+        return allReleases.filter(release => !releasesToKeep.includes(release));
+    }
+
+    logReleasesToDelete(releases) {
+        this.core.info(`Found ${releases.length} release(s) to delete:`);
         for (const release of releases) {
             this.core.info(`- ${release.tag_name} (${release.name || 'no name'})`);
         }

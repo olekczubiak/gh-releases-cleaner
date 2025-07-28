@@ -6,7 +6,7 @@ const { ReleaseService } = require('./ReleaseService');
 async function run(releaseService) {
     try {
         const releases = await releaseService.listAllReleases();
-        releaseService.logReleases(await releaseService.find(releases));
+        releaseService.logReleasesToDelete(releaseService.getToDelete(releases, await releaseService.find(releases));)
     } catch (err) {
         releaseService.core.setFailed(`❌ ${err.message}`);
     }
