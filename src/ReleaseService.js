@@ -76,6 +76,13 @@ class ReleaseService {
             this.core.info(`- ${release.tag_name} (${release.name || 'no name'})`);
         }
     }
+
+    logReleasesToKeep(releases) {
+        this.core.info(`Keeping ${releases.length} release(s):`);
+        for (const release of releases) {
+            this.core.info(`- ${release.tag_name} (${release.name || 'no name'})`);
+        }
+    }
 }
 
 module.exports = { ReleaseService };
