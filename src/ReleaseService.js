@@ -4,11 +4,11 @@ const Strategy = {
 };
 
 class ReleaseService {
-    constructor(octokit, context, logger) {
+    constructor(octokit, context, core) {
         this.octokit = octokit;
         this.owner = context.repo.owner;
         this.repo = context.repo.repo;
-        this.logger = logger;
+        this.core = core;
     }
 
     async listAllReleases() {
@@ -20,7 +20,8 @@ class ReleaseService {
         return data;
     }
 
-    async find(releases, strategy) {
+    async find(releases) {
+        const strategy = this.core.getInput('strategy');
         if (strategy === Strategy.ALL) {
             return releases;
         }
@@ -53,9 +54,9 @@ class ReleaseService {
     }
 
     logReleases(releases) {
-        this.logger.info(`Found ${releases.length} release(s):`);
+        this.core.info(`Found ${releases.length} release(s):`);
         for (const release of releases) {
-            this.logger.info(`- ${release.tag_name} (${release.name || 'no name'})`);
+            this.core.info(`- ${release.tag_name} (${release.name || 'no name'})`);
         }
     }
 }

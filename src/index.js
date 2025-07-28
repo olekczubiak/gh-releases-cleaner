@@ -6,7 +6,7 @@ const { ReleaseService } = require('./ReleaseService');
 async function run(releaseService) {
     try {
         const releases = await releaseService.listAllReleases();
-        releaseService.logReleases(releaseService.find(releases, "latestInMinor"));
+        releaseService.logReleases(releaseService.find(releases));
     } catch (err) {
         releaseService.logger.setFailed(`❌ ${err.message}`);
     }
@@ -14,7 +14,6 @@ async function run(releaseService) {
 
 async function main() {
     const token = core.getInput('token');
-    // const strategy = core.getInput('strategy');
     const octokit = github.getOctokit(token);
     const context = github.context;
 
