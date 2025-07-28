@@ -34,20 +34,16 @@ jobs:
 
           git add dist/index.js
 
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "[auto][skip ci] Update dist/index.js"
-            VERSION=$(cat version.txt)
-            git tag -f v$VERSION
-            IFS='.' read -r major minor patch <<< "${VERSION}"
-            new_patch=$((patch + 1))
-            new_version="$major.$minor.$new_patch"
-            echo $new_version > version.txt
-            git add version.txt
-            git commit -m "[auto][skip ci] Bump version to $new_version"
-            git push --tags --force
-            echo "Changes committed and pushed successfully"
-            echo "Tag created: v$VERSION"
-            echo "New version: $new_version"
-          fi
+          git commit -m "[auto][skip ci] Update dist/index.js"
+          VERSION=$(cat version.txt)
+          git tag -f v$VERSION
+          IFS='.' read -r major minor patch <<< "${VERSION}"
+          new_patch=$((patch + 1))
+          new_version="$major.$minor.$new_patch"
+          echo $new_version > version.txt
+          git add version.txt
+          git commit -m "[auto][skip ci] Bump version to $new_version"
+          git push --tags --force
+          echo "Changes committed and pushed successfully"
+          echo "Tag created: v$VERSION"
+          echo "New version: $new_version"
