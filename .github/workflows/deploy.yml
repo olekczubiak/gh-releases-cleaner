@@ -33,6 +33,9 @@ jobs:
       - name: Build with Rollup
         run: npx rollup --config rollup.config.mjs
 
+      - name: Create timestamp file in dist
+        run: echo "$(date -u +%Y-%m-%dT%H:%M:%S%z)" > dist/timestamp.txt
+
       - name: Commit updated dist/index.js
         run: |
           git config user.name "github-actions[bot]"
