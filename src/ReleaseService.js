@@ -1,6 +1,9 @@
 const Strategy = {
     ALL: 'all',
     LATEST_IN_MINOR: 'latestInMinor',
+    LAST_X_IN_MINOR: 'last\\dInMinor',
+    RELEASES_WITHOUT_MATCH_SEMVER: 'releasesThatNotMatchSemver',
+    RELEASES_WITHOUT_ARTIFACTS: 'releasesThatNotHaveArtifacts',
 };
 
 class ReleaseService {
@@ -28,6 +31,43 @@ class ReleaseService {
         if (strategy === Strategy.ALL) {
             this.core.info('📋 Returning all releases');
             return releases;
+        }
+
+        if (new RegExp(Strategy.LAST_X_IN_MINOR).test(strategy)) {
+            const match = strategy.match(/last(\d+)InMinor/);
+            if (!match) {
+                throw new Error(`Invalid strategy format: ${strategy}`);
+            }
+            const count = parseInt(match[1], 10);
+            this.core.info(`🔢 Keeping last ${count} releases in each minor version`)
+            const latestReleases = {};
+            for (const release of releases) {
+                this.core.info(`🔎 Processing: ${release.tag_name}`)
+                const match = release.tag_name.match(/^v(\d+)\.(\d+)\.(\d+)$/);
+                if (!match) {
+                    this.core.info(`⚠️ Skipping invalid tag format: ${release.tag_name}`);
+                    continue;
+                }
+                const [, major, minor, patch] = match;
+                const key = `v${major}.${minor}`;
+                const currentPatch = parseInt(patch, 10);
+                if (!latestReleases[key]) {
+                    latestReleases[key] = [];
+                }
+                latestReleases[key].push(release);
+                latestReleases[key].sort((a, b) => {
+                    const aPatch = parseInt(a.tag_name.split('.')[2], 10);
+                    const bPatch = parseInt(b.tag_name.split('.')[2], 10);
+                    return bPatch - aPatch; // Sort descending by patch version
+                });
+                if (latestReleases[key].length > count) {
+                    latestReleases[key].pop(); // Keep only the last 'count' releases
+                }
+            }
+            const result = Object.values(latestReleases).flat();
+            this.core.info(`🎯 Returning ${result.length} latest releases (by minor group
+                return result;)`);
+            return result;
         }
 
         if (strategy === Strategy.LATEST_IN_MINOR) {
