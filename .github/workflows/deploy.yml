@@ -1,0 +1,50 @@
+name: "Build and Commit dist/index.js"
+
+on:
+  workflow_dispatch:  # manual trigger
+
+jobs:
+  build-and-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build with Rollup
+        run: npx rollup --config rollup.config.mjs
+
+      - name: Commit updated dist/index.js
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add dist/index.js
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "[auto][skip ci] Update dist/index.js"
+            VERSION=$(cat version.txt)
+            git tag -f v$VERSION
+            IFS='.' read -r major minor patch <<< "${VERSION}"
+            new_patch=$((patch + 1))
+            new_version="$major.$minor.$new_patch"
+            echo $new_version > version.txt
+            git add version.txt
+            git commit -m "[auto][skip ci] Bump version to $new_version"
+            git push --tags --force
+            echo "Changes committed and pushed successfully"
+            echo "Tag created: v$VERSION"
+            echo "New version: $new_version"
+          fi
