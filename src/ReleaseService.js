@@ -54,6 +54,7 @@ class ReleaseService {
     }
 
     logReleases(releases) {
+        this.core.info('Releases');
         this.core.info(`Found ${releases.length} release(s):`);
         for (const release of releases) {
             this.core.info(`- ${release.tag_name} (${release.name || 'no name'})`);
