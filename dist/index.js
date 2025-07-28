@@ -31312,9 +31312,13 @@ function requireReleaseService () {
 	        throw new Error(`Unknown strategy: ${strategy}`);
 	    }
 
-	    logReleases(releases) {
-	        this.core.info('Releases');
-	        this.core.info(`Found ${releases.length} release(s):`);
+	    getToDelete(allReleases, releasesToKeep) {
+	        this.core.info(`📉 Releases to delete: ${allReleases.length - releasesToKeep.length}`);
+	        return allReleases.filter(release => !releasesToKeep.includes(release));
+	    }
+
+	    logReleasesToDelete(releases) {
+	        this.core.info(`Found ${releases.length} release(s) to delete:`);
 	        for (const release of releases) {
 	            this.core.info(`- ${release.tag_name} (${release.name || 'no name'})`);
 	        }
@@ -31338,7 +31342,7 @@ function requireSrc () {
 	async function run(releaseService) {
 	    try {
 	        const releases = await releaseService.listAllReleases();
-	        releaseService.logReleases(await releaseService.find(releases));
+	        releaseService.logReleasesToDelete(releaseService.getToDelete(releases, await releaseService.find(releases)));
 	    } catch (err) {
 	        releaseService.core.setFailed(`❌ ${err.message}`);
 	    }
