@@ -20,9 +20,14 @@ class ReleaseService {
         return data;
     }
 
-    async find(releases) {
-        const strategy = this.core.getInput('strategy');
+    async find(strategy) {
+        const releases = await this.listAllReleases();
+
+        this.log(`🔍 Using strategy: ${strategy}`);
+        this.log(`📦 Total releases fetched: ${releases.length}`);
+
         if (strategy === Strategy.ALL) {
+            this.log('📋 Returning all releases');
             return releases;
         }
 
@@ -30,24 +35,32 @@ class ReleaseService {
             const latestReleases = {};
 
             for (const release of releases) {
+                this.log(`🔎 Processing: ${release.tag_name}`);
                 const match = release.tag_name.match(/^v(\d+)\.(\d+)\.(\d+)$/);
-                if (!match) continue;
+                if (!match) {
+                    this.log(`⚠️ Skipping invalid tag format: ${release.tag_name}`);
+                    continue;
+                }
 
-                const [ , major, minor, patch ] = match;
+                const [, major, minor, patch] = match;
                 const key = `v${major}.${minor}`;
                 const currentPatch = parseInt(patch, 10);
+                const existing = latestReleases[key];
 
-                if (
-                    !latestReleases[key] ||
-                    currentPatch > parseInt(latestReleases[key].tag_name.split('.')[2], 10)
-                ) {
+                if (!existing || currentPatch > parseInt(existing.tag_name.split('.')[2], 10)) {
+                    this.log(`✅ Updating latest for ${key}: ${release.tag_name}`);
                     latestReleases[key] = release;
+                } else {
+                    this.log(`↩️ Keeping existing ${existing.tag_name} over ${release.tag_name}`);
                 }
             }
 
-            return Object.values(latestReleases).sort((a, b) =>
+            const result = Object.values(latestReleases).sort((a, b) =>
                 b.tag_name.localeCompare(a.tag_name, undefined, { numeric: true })
             );
+
+            this.log(`🎯 Returning ${result.length} latest releases (by minor group)`);
+            return result;
         }
 
         throw new Error(`Unknown strategy: ${strategy}`);
