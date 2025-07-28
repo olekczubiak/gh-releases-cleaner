@@ -22,7 +22,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm install @actions/core @actions/github
+        run: npm install @actions/core @actions/github rollup
 
       - name: Build with Rollup
         run: npx rollup --config rollup.config.mjs
