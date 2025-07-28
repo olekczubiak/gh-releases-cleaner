@@ -5,6 +5,9 @@ inputs:
   token:
     description: "GitHub Token"
     required: true
+  strategy:
+    description: "Strategy to use for cleaning releases. See readme.MD"
+    required: true
 runs:
   using: "node20"
   main: dist/index.js
