@@ -50,3 +50,5 @@ jobs:
           echo "Changes committed and pushed successfully"
           echo "Tag created: v$VERSION"
           echo "New version: $new_version"
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
