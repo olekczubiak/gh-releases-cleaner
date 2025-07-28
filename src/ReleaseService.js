@@ -23,11 +23,11 @@ class ReleaseService {
     async find(strategy) {
         const releases = await this.listAllReleases();
 
-        this.log(`🔍 Using strategy: ${strategy}`);
-        this.log(`📦 Total releases fetched: ${releases.length}`);
+        this.core.info(`🔍 Using strategy: ${strategy}`);
+        this.core.info(`📦 Total releases fetched: ${releases.length}`);
 
         if (strategy === Strategy.ALL) {
-            this.log('📋 Returning all releases');
+            this.core.info('📋 Returning all releases');
             return releases;
         }
 
@@ -35,10 +35,10 @@ class ReleaseService {
             const latestReleases = {};
 
             for (const release of releases) {
-                this.log(`🔎 Processing: ${release.tag_name}`);
+                this.core.info(`🔎 Processing: ${release.tag_name}`);
                 const match = release.tag_name.match(/^v(\d+)\.(\d+)\.(\d+)$/);
                 if (!match) {
-                    this.log(`⚠️ Skipping invalid tag format: ${release.tag_name}`);
+                    this.core.info(`⚠️ Skipping invalid tag format: ${release.tag_name}`);
                     continue;
                 }
 
@@ -48,10 +48,10 @@ class ReleaseService {
                 const existing = latestReleases[key];
 
                 if (!existing || currentPatch > parseInt(existing.tag_name.split('.')[2], 10)) {
-                    this.log(`✅ Updating latest for ${key}: ${release.tag_name}`);
+                    this.core.info(`✅ Updating latest for ${key}: ${release.tag_name}`);
                     latestReleases[key] = release;
                 } else {
-                    this.log(`↩️ Keeping existing ${existing.tag_name} over ${release.tag_name}`);
+                    this.core.info(`↩️ Keeping existing ${existing.tag_name} over ${release.tag_name}`);
                 }
             }
 
@@ -59,7 +59,7 @@ class ReleaseService {
                 b.tag_name.localeCompare(a.tag_name, undefined, { numeric: true })
             );
 
-            this.log(`🎯 Returning ${result.length} latest releases (by minor group)`);
+            this.core.info(`🎯 Returning ${result.length} latest releases (by minor group)`);
             return result;
         }
 
