@@ -45,29 +45,22 @@ jobs:
           base_tag="${{ steps.base.outputs.base_tag }}"
           latest_tag="${{ steps.latest.outputs.latest_tag }}"
           echo "Generating changelog from $base_tag to $latest_tag"
-          changelog=$(git log "$base_tag..$latest_tag" --pretty=format:"- %s")
+
+          changelog=$(git log "$base_tag..$latest_tag" --pretty=format:"- %s" | grep -v '\[auto\]')
+
+          if [ -z "$changelog" ]; then
+            changelog="No user commits found between $base_tag and $latest_tag."
+          fi
+
           echo "$changelog" > release_notes.md
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           echo "$changelog" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Calculate new minor version
-        id: bump
-        run: |
-          latest="${{ steps.latest.outputs.latest_tag }}"
-          version=${latest#v}
-          IFS='.' read -r major minor patch <<< "$version"
-          new_minor=$((minor + 1))
-          new_version="$major.$new_minor.0"
-          new_tag="v$new_version"
-          echo "$new_version" > version.txt
-          echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
-          echo "new_version=$new_version" >> $GITHUB_OUTPUT
-
       - name: Commit updated version.txt
         run: |
           git add version.txt
-          git commit -m "[release] ${{ steps.bump.outputs.new_tag }} created"
+          git commit -m "[auto][skip ci][release] ${{ steps.bump.outputs.new_tag }} created"
           git push origin master
 
       - name: Create new tag
