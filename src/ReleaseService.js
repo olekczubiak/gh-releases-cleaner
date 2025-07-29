@@ -121,6 +121,12 @@ class ReleaseService {
             return result;
         }
 
+        if (strategy === Strategy.RELEASES_WITHOUT_ARTIFACTS) {
+            const result = releases.filter(release => !release.assets || release.assets.length === 0);
+            this.core.info(`🎯 Returning ${result.length} releases without artifacts`);
+            return result;
+        }
+
         throw new Error(`Unknown strategy: ${strategy}`);
     }
 
