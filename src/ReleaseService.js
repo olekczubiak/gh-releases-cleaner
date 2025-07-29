@@ -102,6 +102,13 @@ class ReleaseService {
             return result;
         }
 
+        if (strategy === Strategy.RELEASES_WITHOUT_MATCH_SEMVER) {
+            const semverRegex = /^v\d+\.\d+\.\d+$/;
+            const result = releases.filter(release => !semverRegex.test(release.tag_name));
+            this.core.info(`🎯 Returning ${result.length} releases that do not match semver`);
+            return result;
+        }
+
         throw new Error(`Unknown strategy: ${strategy}`);
     }
 
