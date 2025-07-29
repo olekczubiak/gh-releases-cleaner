@@ -1,0 +1,80 @@
+name: "Create Minor Release"
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Get latest tag
+        id: latest
+        run: |
+          latest_tag=$(git describe --tags --abbrev=0)
+          echo "latest_tag=$latest_tag" >> $GITHUB_OUTPUT
+
+      - name: Determine base tag for changelog
+        id: base
+        run: |
+          latest_tag="${{ steps.latest.outputs.latest_tag }}"
+          base_minor=$(echo "$latest_tag" | sed -E 's/v([0-9]+)\.([0-9]+)\..*/v\1.\2.0/')
+          echo "base_tag=$base_minor" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog from commits
+        id: changelog
+        run: |
+          base_tag="${{ steps.base.outputs.base_tag }}"
+          latest_tag="${{ steps.latest.outputs.latest_tag }}"
+          echo "Generating changelog from $base_tag to $latest_tag"
+          changelog=$(git log "$base_tag..$latest_tag" --pretty=format:"- %s")
+          echo "$changelog" > release_notes.md
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$changelog" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Calculate new minor version
+        id: bump
+        run: |
+          latest="${{ steps.latest.outputs.latest_tag }}"
+          version=${latest#v}
+          IFS='.' read -r major minor patch <<< "$version"
+          new_minor=$((minor + 1))
+          new_version="$major.$new_minor.0"
+          new_tag="v$new_version"
+          echo "$new_version" > version.txt
+          echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+
+      - name: Commit updated version.txt
+        run: |
+          git add version.txt
+          git commit -m "[release] ${{ steps.bump.outputs.new_tag }} created"
+          git push origin master
+
+      - name: Create new tag
+        run: |
+          git tag -a "${{ steps.bump.outputs.new_tag }}" -m "Release ${{ steps.bump.outputs.new_tag }}"
+          git push origin "${{ steps.bump.outputs.new_tag }}"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.bump.outputs.new_tag }}
+          name: Release ${{ steps.bump.outputs.new_tag }}
+          body: ${{ steps.changelog.outputs.changelog }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
