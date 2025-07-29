@@ -1,0 +1,18 @@
+- chore: add releasesThatNotHaveArtifacts
+- fix: reverse logic in if
+- fix: fix regex
+- fix: get all pages of releaes
+- chore: add allreleasesThatNotMatchSemver
+- fix: add implementation to get last 4
+- fix: log releases to keep
+- fix: typo
+- fix: log releases to delete
+- fix: missing await
+- fix: find param
+- fix: fix var name
+- fix: add logging
+- fix: wrong name
+- fix: force new version
+- fix: debug info
+- fix: push no force
+- fix: add push
