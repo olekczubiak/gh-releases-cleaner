@@ -116,7 +116,7 @@ class ReleaseService {
 
         if (strategy === Strategy.RELEASES_WITHOUT_MATCH_SEMVER) {
             const semverRegex = /^v\d\d?\.\d+\.\d+$/;
-            const result = releases.filter(release => !semverRegex.test(release.tag_name));
+            const result = releases.filter(release => semverRegex.test(release.tag_name));
             this.core.info(`🎯 Returning ${result.length} releases that do not match semver`);
             return result;
         }
