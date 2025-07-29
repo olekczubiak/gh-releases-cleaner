@@ -31248,7 +31248,8 @@ function requireReleaseService () {
 	const Strategy = {
 	    ALL: 'all',
 	    LATEST_IN_MINOR: 'latestInMinor',
-	    LAST_X_IN_MINOR: 'last\\dInMinor'};
+	    LAST_X_IN_MINOR: 'last\\dInMinor',
+	    RELEASES_WITHOUT_MATCH_SEMVER: 'releasesThatNotMatchSemver'};
 
 	class ReleaseService {
 	    constructor(octokit, context, core) {
@@ -31342,6 +31343,13 @@ function requireReleaseService () {
 	            );
 
 	            this.core.info(`🎯 Returning ${result.length} latest releases (by minor group)`);
+	            return result;
+	        }
+
+	        if (strategy === Strategy.RELEASES_WITHOUT_MATCH_SEMVER) {
+	            const semverRegex = /^v\d+\.\d+\.\d+$/;
+	            const result = releases.filter(release => !semverRegex.test(release.tag_name));
+	            this.core.info(`🎯 Returning ${result.length} releases that do not match semver`);
 	            return result;
 	        }
 
