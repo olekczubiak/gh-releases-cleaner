@@ -57,10 +57,10 @@ jobs:
           echo "$changelog" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Commit updated version.txt
+      - name: Commit updated version.txt and release notes
         run: |
-          git add version.txt
-          git commit -m "[auto][skip ci][release] ${{ steps.bump.outputs.new_tag }} created"
+          git add version.txt release_notes.md
+          git commit -m "[release] ${{ steps.bump.outputs.new_tag }} created"
           git push origin master
 
       - name: Create new tag
