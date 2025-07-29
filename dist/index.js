@@ -31249,7 +31249,9 @@ function requireReleaseService () {
 	    ALL: 'all',
 	    LATEST_IN_MINOR: 'latestInMinor',
 	    LAST_X_IN_MINOR: 'last\\dInMinor',
-	    RELEASES_WITHOUT_MATCH_SEMVER: 'releasesThatNotMatchSemver'};
+	    RELEASES_WITHOUT_MATCH_SEMVER: 'releasesThatNotMatchSemver',
+	    RELEASES_WITHOUT_ARTIFACTS: 'releasesThatNotHaveArtifacts',
+	};
 
 	class ReleaseService {
 	    constructor(octokit, context, core) {
@@ -31362,6 +31364,12 @@ function requireReleaseService () {
 	            const semverRegex = /^v\d\d?\.\d+\.\d+$/;
 	            const result = releases.filter(release => semverRegex.test(release.tag_name));
 	            this.core.info(`🎯 Returning ${result.length} releases that do not match semver`);
+	            return result;
+	        }
+
+	        if (strategy === Strategy.RELEASES_WITHOUT_ARTIFACTS) {
+	            const result = releases.filter(release => !release.assets || release.assets.length === 0);
+	            this.core.info(`🎯 Returning ${result.length} releases without artifacts`);
 	            return result;
 	        }
 
