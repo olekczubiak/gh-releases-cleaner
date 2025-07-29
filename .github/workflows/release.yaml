@@ -31,8 +31,13 @@ jobs:
         id: base
         run: |
           latest_tag="${{ steps.latest.outputs.latest_tag }}"
-          base_minor=$(echo "$latest_tag" | sed -E 's/v([0-9]+)\.([0-9]+)\..*/v\1.\2.0/')
-          echo "base_tag=$base_minor" >> $GITHUB_OUTPUT
+          version=${latest_tag#v}
+          IFS='.' read -r major minor patch <<< "$version"
+
+          prefix="v$major.$minor."
+          base_tag=$(git tag --sort=version:refname | grep "^$prefix" | head -n 1)
+
+          echo "base_tag=$base_tag" >> $GITHUB_OUTPUT
 
       - name: Generate changelog from commits
         id: changelog
