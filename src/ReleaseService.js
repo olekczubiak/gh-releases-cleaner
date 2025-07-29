@@ -15,12 +15,24 @@ class ReleaseService {
     }
 
     async listAllReleases() {
-        const { data } = await this.octokit.rest.repos.listReleases({
-            owner: this.owner,
-            repo: this.repo,
-        });
+        const releases = [];
+        let page = 1;
 
-        return data;
+        while (true) {
+            const { data } = await this.octokit.rest.repos.listReleases({
+                owner: this.owner,
+                repo: this.repo,
+                per_page: 100,
+                page,
+            });
+
+            if (data.length === 0) break;
+
+            releases.push(...data);
+            page++;
+        }
+
+        return releases;
     }
 
     async find(releases) {
