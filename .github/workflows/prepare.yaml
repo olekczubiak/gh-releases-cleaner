@@ -30,13 +30,15 @@ jobs:
           echo "$new_version" > version.txt
           echo "new_version=$new_version" >> $GITHUB_OUTPUT
 
-      - name: Commit and tag new version
+      - name: Commit and push version.txt and tag
         run: |
           git add version.txt
           git commit -m "[auto][skip ci] Prepare release v${{ steps.versioning.outputs.new_version }}"
-          git tag -f "v${{ steps.versioning.outputs.new_version }}"
-          git push
-          git push --tags
+          git tag -a "v${{ steps.versioning.outputs.new_version }}" -m "Release ${{ steps.versioning.outputs.new_version }}"
+          git push origin master
+          git push origin "v${{ steps.versioning.outputs.new_version }}"
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
 
       - name: Create placeholder GitHub release
         run: |
