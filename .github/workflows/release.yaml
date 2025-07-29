@@ -57,6 +57,23 @@ jobs:
           echo "$changelog" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
+      - name: Calculate new minor version
+        id: bump
+        run: |
+          latest="${{ steps.latest.outputs.latest_tag }}"
+          version=${latest#v}
+          IFS='.' read -r major minor patch <<< "$version"
+          new_minor=$((minor + 1))
+          new_version="$major.$new_minor.0"
+          new_tag="v$new_version"
+
+          # Output both version and tag
+          echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+
+          # Also update version.txt
+          echo "$new_version" > version.txt
+
       - name: Commit updated version.txt and release notes
         run: |
           git add version.txt release_notes.md
