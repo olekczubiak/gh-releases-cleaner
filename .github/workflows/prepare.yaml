@@ -1,0 +1,47 @@
+name: "Prepare Minor Release"
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Read current version and bump minor
+        id: versioning
+        run: |
+          VERSION=$(cat version.txt)
+          echo "Current version: $VERSION"
+          IFS='.' read -r major minor patch <<< "$VERSION"
+          new_minor=$((minor + 1))
+          new_version="$major.$new_minor.0"
+          echo "$new_version" > version.txt
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+
+      - name: Commit and tag new version
+        run: |
+          git add version.txt
+          git commit -m "[auto][skip ci] Prepare release v${{ steps.versioning.outputs.new_version }}"
+          git tag -f "v${{ steps.versioning.outputs.new_version }}"
+          git push
+          git push --tags
+
+      - name: Create placeholder GitHub release
+        run: |
+          gh release create "v${{ steps.versioning.outputs.new_version }}" \
+            --title "v${{ steps.versioning.outputs.new_version }}" \
+            --notes "🚧 Placeholder for upcoming changes"
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}

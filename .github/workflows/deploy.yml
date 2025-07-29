@@ -57,5 +57,18 @@ jobs:
           echo "Changes committed and pushed successfully"
           echo "Tag created: v$VERSION"
           echo "New version: $new_version"
+
+          # Append commits to release
+          commits=$(git log v$VERSION..HEAD --pretty=format:"- %s (%h)" --invert-grep --grep="\[skip ci\]")
+
+          if gh release view v$VERSION &>/dev/null; then
+            prev_notes=$(gh release view v$VERSION --json body --jq .body)
+            gh release edit v$VERSION --notes "${prev_notes}"$'\n'"${commits}"
+          else
+            gh release create v$VERSION --title "v$VERSION" --notes "${commits}"
+          fi
+
+          echo "Tag created: v$VERSION"
+          echo "New version: $new_version"
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
